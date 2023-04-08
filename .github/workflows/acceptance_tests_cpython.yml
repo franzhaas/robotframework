@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - qdirty_speed_hack 
     paths:
       - '.github/workflows/**'
       - 'src/**'
