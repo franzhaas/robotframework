@@ -14,6 +14,7 @@
 #  limitations under the License.
 
 import os
+import pathlib
 import sys
 import importlib
 import importlib.util
@@ -246,15 +247,8 @@ class ByPathImporter(_Importer):
 
     def import_(self, path, get_class=True):
         self._verify_import_path(path)
-        #self._remove_wrong_module_from_sys_modules(path)
-        importing_from, name = self._split_path_to_module(path)
-        encumbered  = importlib.util.find_spec(name)
-        newspec = importlib.util.spec_from_file_location(name, path, submodule_search_locations=sys.path)
-        if encumered != newspec:
-            del sys.modules[name]
-        
-        imported = importlib.util.module_from_spec(spec)
-        
+        self._remove_wrong_module_from_sys_modules(path)
+        imported = self._import_by_path(path)
         if get_class:
             imported = self._get_class_from_module(imported) or imported
         return self._verify_type(imported), path
@@ -316,9 +310,8 @@ class NonDottedImporter(_Importer):
         encumbered  = importlib.util.find_spec(name)
         imported = importlib.util.module_from_spec(encumbered)
         encumbered.loader.exec_module(imported)
-        
         if get_class:
-            imported = self._get_class_from_module(imported, lib_name) or imported
+            imported = self._get_class_from_module(imported) or imported
         return self._verify_type(imported), self._get_source(imported)
 
 
@@ -328,12 +321,11 @@ class DottedImporter(_Importer):
         return '.' in name
 
     def import_(self, name, get_class=True):
-        parent_name, lib_name = name.rsplit('.', 1)
-
         encumbered  = importlib.util.find_spec(name)
         imported = importlib.util.module_from_spec(encumbered)
         encumbered.loader.exec_module(imported)
-        
+
+        _, lib_name = name.rsplit('.', 1)
         if get_class:
             imported = self._get_class_from_module(imported, lib_name) or imported
         return self._verify_type(imported), self._get_source(imported)
