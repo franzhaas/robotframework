@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - lesscacheclearance
     paths:
       - '.github/workflows/**'
       - 'src/**'

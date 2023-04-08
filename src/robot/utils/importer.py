@@ -212,7 +212,6 @@ class _Importer:
         if name in sys.builtin_module_names:
             raise DataError('Cannot import custom module with same name as '
                             'Python built-in module.')
-        importlib.invalidate_caches()
         try:
             return __import__(name, fromlist=fromlist)
         except:
