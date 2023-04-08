@@ -16,6 +16,7 @@
 import os
 import sys
 import importlib
+import importlib.util
 import inspect
 
 from robot.errors import DataError
@@ -245,8 +246,15 @@ class ByPathImporter(_Importer):
 
     def import_(self, path, get_class=True):
         self._verify_import_path(path)
-        self._remove_wrong_module_from_sys_modules(path)
-        imported = self._import_by_path(path)
+        #self._remove_wrong_module_from_sys_modules(path)
+        importing_from, name = self._split_path_to_module(path)
+        encumbered  = importlib.util.find_spec(name)
+        newspec = importlib.util.spec_from_file_location(name, path, submodule_search_locations=sys.path)
+        if encumered != newspec:
+            del sys.modules[name]
+        
+        imported = importlib.util.module_from_spec(spec)
+        
         if get_class:
             imported = self._get_class_from_module(imported) or imported
         return self._verify_type(imported), path
@@ -305,9 +313,12 @@ class NonDottedImporter(_Importer):
         return '.' not in name
 
     def import_(self, name, get_class=True):
-        imported = self._import(name)
+        encumbered  = importlib.util.find_spec(name)
+        imported = importlib.util.module_from_spec(encumbered)
+        encumbered.loader.exec_module(imported)
+        
         if get_class:
-            imported = self._get_class_from_module(imported) or imported
+            imported = self._get_class_from_module(imported, lib_name) or imported
         return self._verify_type(imported), self._get_source(imported)
 
 
@@ -318,12 +329,11 @@ class DottedImporter(_Importer):
 
     def import_(self, name, get_class=True):
         parent_name, lib_name = name.rsplit('.', 1)
-        parent = self._import(parent_name, fromlist=[str(lib_name)])
-        try:
-            imported = getattr(parent, lib_name)
-        except AttributeError:
-            raise DataError("Module '%s' does not contain '%s'."
-                            % (parent_name, lib_name))
+
+        encumbered  = importlib.util.find_spec(name)
+        imported = importlib.util.module_from_spec(encumbered)
+        encumbered.loader.exec_module(imported)
+        
         if get_class:
             imported = self._get_class_from_module(imported, lib_name) or imported
         return self._verify_type(imported), self._get_source(imported)
