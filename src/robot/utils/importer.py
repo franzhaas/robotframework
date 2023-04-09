@@ -299,9 +299,9 @@ class ByPathImporter(_Importer):
         if module_name in sys.modules:
             return sys.modules[module_name]
         path = pathlib.Path(path)
-        if path.suffix == ".py":
+        if path.suffix == "":
             try:
-                spec = importlib.util.spec_from_file_location(module_name, path)
+                spec = importlib.util.spec_from_file_location(module_name, path / "__init__.py", submodule_search_locations=[path])
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
                 return module
