@@ -277,6 +277,9 @@ class ByPathImporter(_Importer):
         if name not in sys.modules:
             return False
         source = getattr(sys.modules[name], '__file__', None)
+        if name in sys.builtin_module_names:
+            raise DataError('Cannot import custom module with same name as '
+                            'Python built-in module.')
         if not source:  # play safe
             return True
         imported_from, imported_package = self._get_import_information(source)
@@ -310,29 +313,12 @@ class ByPathImporter(_Importer):
                 path = '\n'.join(f'  {p}' for p in sys.path)
                 raise DataError(f'{message}\n{traceback}\nPYTHONPATH:\n{path}')
         else:
+            sys.path.insert(0, module_dir)
+            importlib.invalidate_caches()
             try:
-                if (path.parent / "__init__.py").exists():
-                    spec = importlib.util.spec_from_file_location(module_name, path, submodule_search_locations=[])
-                else:
-                    spec = importlib.util.spec_from_file_location(module_name, path)
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                path = path.parent
-                while path.stem:
-                    #print(path, module_name)
-                    try:
-                        return __import__(module_name, fromlist=[module_name])
-                    except Exception as e:
-                        #print(e)
-                        pass
-                    module_name = path.stem + "." + module_name
-                    path = path.parent
-                print("-------------")
-                return module
-            except:
-                message, traceback = get_error_details(full_traceback=False)
-                path = '\n'.join(f'  {p}' for p in sys.path)
-                raise DataError(f'{message}\n{traceback}\nPYTHONPATH:\n{path}')
+                return self._import(module_name)
+            finally:
+                sys.path.remove(module_dir)    
 
 
 class NonDottedImporter(_Importer):
