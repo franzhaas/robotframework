@@ -313,7 +313,7 @@ class ByPathImporter(_Importer):
                 raise DataError(f'{message}\n{traceback}\nPYTHONPATH:\n{path}')
         else:
             try:
-                spec = importlib.util.spec_from_file_location(module_name, path)
+                spec = importlib.util.spec_from_file_location(module_name, path, submodule_search_locations=[path.parent])
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
                 sys.modules[module_name] = module
