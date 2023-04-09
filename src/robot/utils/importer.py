@@ -312,7 +312,7 @@ class ByPathImporter(_Importer):
         else:
             try:
                 if (path.parent / "__init__.py").exists():
-                    spec = importlib.util.spec_from_file_location(path.parent.stem  + "." + module_name, path, submodule_search_locations=[path.parent])
+                    spec = importlib.util.spec_from_file_location(module_name, path, submodule_search_locations=[path.parent])
                 else:
                     spec = importlib.util.spec_from_file_location(module_name, path)
                 module = importlib.util.module_from_spec(spec)
