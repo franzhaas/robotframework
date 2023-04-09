@@ -311,7 +311,11 @@ class ByPathImporter(_Importer):
                 raise DataError(f'{message}\n{traceback}\nPYTHONPATH:\n{path}')
         else:
             try:
-                spec = importlib.util.spec_from_file_location(module_name, path, submodule_search_locations=[path.parent])
+                if (path.parent / "__init__.py").exists():
+                    spec = importlib.util.spec_from_file_location(path.parent.stem  + "." + module_name, path)
+                else:
+                    spec = importlib.util.spec_from_file_location(module_name, path)
+                spec = importlib.util.spec_from_file_location(module_name, path)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
                 return module
