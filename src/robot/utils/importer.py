@@ -14,7 +14,9 @@
 #  limitations under the License.
 
 import os
+import pathlib
 import sys
+import importlib.util
 import importlib
 import inspect
 
@@ -291,12 +293,29 @@ class ByPathImporter(_Importer):
 
     def _import_by_path(self, path):
         module_dir, module_name = self._split_path_to_module(path)
-        sys.path.insert(0, module_dir)
-        importlib.invalidate_caches()
-        try:
-            return self._import(module_name)
-        finally:
-            sys.path.remove(module_dir)
+        if module_name in sys.builtin_module_names:
+            raise DataError('Cannot import custom module with same name as '
+                            'Python built-in module.')
+        if module_name in sys.modules:
+            return sys.modules[module_name]
+        path = pathlib.Path(path)
+        if path.suffix == ".py":
+            try:
+                spec = importlib.util.spec_from_file_location(module_name, path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                return module
+            except:
+                message, traceback = get_error_details(full_traceback=False)
+                path = '\n'.join(f'  {p}' for p in sys.path)
+                raise DataError(f'{message}\n{traceback}\nPYTHONPATH:\n{path}')
+        else:
+            sys.path.insert(0, module_dir)
+            importlib.invalidate_caches()
+            try:
+                return self._import(module_name)
+            finally:
+                sys.path.remove(module_dir)
 
 
 class NonDottedImporter(_Importer):
