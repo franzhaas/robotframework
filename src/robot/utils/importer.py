@@ -312,11 +312,22 @@ class ByPathImporter(_Importer):
         else:
             try:
                 if (path.parent / "__init__.py").exists():
-                    spec = importlib.util.spec_from_file_location(module_name, path, submodule_search_locations=[path.parent])
+                    spec = importlib.util.spec_from_file_location(module_name, path, submodule_search_locations=[])
                 else:
                     spec = importlib.util.spec_from_file_location(module_name, path)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
+                path = path.parent
+                while path.stem:
+                    #print(path, module_name)
+                    try:
+                        return __import__(module_name, fromlist=[module_name])
+                    except Exception as e:
+                        #print(e)
+                        pass
+                    module_name = path.stem + "." + module_name
+                    path = path.parent
+                print("-------------")
                 return module
             except:
                 message, traceback = get_error_details(full_traceback=False)
