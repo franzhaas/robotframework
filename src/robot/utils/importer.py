@@ -307,18 +307,21 @@ class ByPathImporter(_Importer):
                 spec = importlib.util.spec_from_file_location(module_name, path / "__init__.py", submodule_search_locations=[path])
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
-                return module
             except:
                 message, traceback = get_error_details(full_traceback=False)
                 path = '\n'.join(f'  {p}' for p in sys.path)
                 raise DataError(f'{message}\n{traceback}\nPYTHONPATH:\n{path}')
         else:
-            sys.path.insert(0, module_dir)
-            importlib.invalidate_caches()
             try:
-                return self._import(module_name)
-            finally:
-                sys.path.remove(module_dir)    
+                spec = importlib.util.spec_from_file_location(module_name, path)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                sys.modules[module_name] = module
+            except:
+                message, traceback = get_error_details(full_traceback=False)
+                path = '\n'.join(f'  {p}' for p in sys.path)
+                raise DataError(f'{message}\n{traceback}\nPYTHONPATH:\n{path}')
+        return sys.modules[module_name]
 
 
 class NonDottedImporter(_Importer):
