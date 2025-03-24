@@ -6,6 +6,7 @@ on:
       - main
       - master
       - v*-maintenance
+      - n*
     paths:
       - '.github/workflows/**'
       - 'src/**'
