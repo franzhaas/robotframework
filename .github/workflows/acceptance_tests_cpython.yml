@@ -81,7 +81,7 @@ jobs:
           python -m pip install -r atest/requirements.txt
           ${{ env.ATEST_PYTHON }} -m pip install -r atest/requirements-run.txt
           python -m pip install -e .
-          ${{ env.ATEST_PYTHON }} -e .
+          ${{ env.ATEST_PYTHON }} -m pip -e .
           
           ${{ matrix.set_codepage }}
           ${{ matrix.set_display }}
