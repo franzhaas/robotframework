@@ -36,9 +36,6 @@ Libdoc itself is implemented in the :mod:`~robot.libdocpkg` package.
 import sys
 from pathlib import Path
 
-if __name__ == '__main__' and 'robot' not in sys.modules:
-    import pythonpathsetter
-
 from robot.utils import Application, seq2str
 from robot.errors import DataError
 from robot.libdocpkg import LibraryDocumentation, ConsoleViewer
